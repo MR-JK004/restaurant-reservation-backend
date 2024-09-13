@@ -7,7 +7,7 @@ const authMiddleware = async(req, res, next) => {
     if(token)
     {
         let payload = await auth.decodeToken(token)
-        if(payload.exp> (Math.floor(Date.now()/1000))){
+        if(payload.exp > (Math.floor(Date.now()/1000))){
             req.name = payload.name;
             req.email = payload.email;
             req.user_id = payload.user_id;

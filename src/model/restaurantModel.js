@@ -9,6 +9,10 @@ const restaurantSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    isFeatured:{
+        type:Boolean,
+        default:false
+    },
     restaurant_id:{
         type:String,
         required:true

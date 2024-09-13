@@ -372,11 +372,58 @@ const bookingRestaurant = async (req, res) => {
     }
 };
 
+const getFeaturedRestaurant = async(req,res) => {
+    try {
+        const restaurants = await restaurantModel.find({isFeatured:true})
+        const restaurantIds = restaurants.map(restaurant => restaurant.restaurant_id);
+
+        const ratings = await reviewModel.aggregate([
+            { $match: { restaurant: { $in: restaurantIds } } },  
+            {
+                $group: {
+                    _id: '$restaurant',        
+                    averageRating: { $avg: '$rating' } 
+                }
+            }
+        ]);
+
+        const featuredRestaurants = restaurants.map(restaurant => {
+            const restaurantRating = ratings.find(r => r._id === restaurant.restaurant_id);
+            return {
+                ...restaurant.toObject(),
+                averageRating: restaurantRating ? restaurantRating.averageRating : null
+            };
+        });
+
+        res.status(200).send({featuredRestaurants})
+    } 
+    catch (error) {
+        res.status(500).send({
+            message:error.message||"Internal Server Error"
+        })
+    }
+}
+
+const updateFeatured = async(req,res) => {
+    const { restaurantId, isFeatured } = req.body;
+    console.log(restaurantId,isFeatured)
+
+    try {
+        await restaurantModel.updateOne({restaurant_id:restaurantId},{$set:{ isFeatured: isFeatured }});
+        res.status(200).json({ message: 'Restaurant status updated' });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to update status' });
+        console.log(error)
+    }
+}
+
 export default {
     createRestaurant,
     getAllRestaurants,
     getRestaurantById,
     filterByCuisine,
     bookingRestaurant,
-    filterByPrice
+    filterByPrice,
+    getFeaturedRestaurant,
+    updateFeatured
 };
